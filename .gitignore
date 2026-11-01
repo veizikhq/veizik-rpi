@@ -2,3 +2,5 @@ packs/*.vzqup
 packs/*.vzqup.sha256
 *.ppm
 *.log
+bundles/*/models/*/*.vzqup
+bundles/*/models/*/*.vzqup.cache.*
