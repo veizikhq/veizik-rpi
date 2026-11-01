@@ -1,0 +1,1 @@
+GPT-2 weights: MIT License (OpenAI). Permission is hereby granted... (full MIT text included at publish).

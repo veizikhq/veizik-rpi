@@ -1,0 +1,1 @@
+TAESD weights: MIT License (madebyollin). (full MIT text included at publish).

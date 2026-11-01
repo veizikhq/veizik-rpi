@@ -1,0 +1,17 @@
+veizik-rpi — third-party model weight notices
+=============================================
+This package distributes model weights under their respective licenses. The veizik
+engine and number formats are veizik's own. Per-model notices (LICENSES/):
+
+BUNDLEABLE (license-clear):
+  gpt2-124m / gpt2-124m-awq   GPT-2 (OpenAI)            MIT                LICENSES/gpt2.txt
+  smollm2-135m / smollm2-360m SmolLM2 (HuggingFaceTB)   Apache-2.0         LICENSES/smollm2.txt
+  lfm2.5-230m                 LFM2.5 (Liquid AI)        LFM Open License v1.0  LICENSES/lfm.txt
+  taesd-z2w / taesd-sdxs      TAESD (madebyollin)       MIT                LICENSES/taesd.txt
+
+GATED (not in the public asset set until clearance):
+  sd15-* / sdxs-* / video-*   SD1.5 / DreamShaper / AnimateDiff   CreativeML OpenRAIL-M
+      -> conditional ship: Attachment-A use restrictions apply; recipients receive the license;
+         modifications must be stated; all notices retained. LICENSES/openrail-m.txt
+  sana-sprint-0.6b-te         text encoder = Gemma-2-2B           Gemma Terms  -> EXCLUDED (gated redistribution; NOT shipped)
+  (SANA shipped as measurements/demo images only, no weight pack.)

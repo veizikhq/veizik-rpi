@@ -1,0 +1,1 @@
+SD1.5 / DreamShaper / AnimateDiff weights: CreativeML OpenRAIL-M. Attachment A use restrictions apply; recipients receive this license; state modifications; retain notices. (full text included at publish).

@@ -1,0 +1,1 @@
+SmolLM2 weights: Apache License 2.0 (HuggingFaceTB). (full Apache-2.0 text included at publish).

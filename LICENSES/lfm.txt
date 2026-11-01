@@ -1,0 +1,1 @@
+LFM2.5 weights: LFM Open License v1.0 (Liquid AI). Commercial use permitted for entities under US$10M revenue (veizik: cleared, point-in-time). (full text included at publish).
