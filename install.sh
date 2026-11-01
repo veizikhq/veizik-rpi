@@ -19,5 +19,16 @@ BINDIR="$ROOT/bin/$SOC"
 echo "veizik-rpi: $MODEL -> SoC $SOC, ${MEMKB}kB RAM, default mode=$DEF_MODE"
 [ -x "$BINDIR/vzsd15z_accel" ] || { echo "runtime for $SOC not present in this package ($BINDIR)"; exit 3; }
 PACKS="${VZ_PACKS:-$ROOT/packs}"; mkdir -p "$HOME/.veizik/edge"
+# MANDATORY: reactive thermal governor for ML compute -- caps the SoC <=76C so sustained SD/SANA/LLM
+# renders complete instead of hitting the 80C firmware hard-throttle + OOM-crashing the board.
+if [ -d "$ROOT/thermal" ]; then
+  if sudo install -D -m755 "$ROOT/thermal/vz_thermal_governor.sh" /opt/veizik/thermal/vz_thermal_governor.sh 2>/dev/null \
+     && sudo install -D -m644 "$ROOT/thermal/vz-thermal-governor.service" /etc/systemd/system/vz-thermal-governor.service 2>/dev/null \
+     && sudo systemctl daemon-reload 2>/dev/null && sudo systemctl enable --now vz-thermal-governor.service 2>/dev/null; then
+    echo "thermal governor: installed + enabled (vz-thermal-governor.service, reactive <=76C cap)"
+  else
+    echo "WARNING: thermal governor NOT installed (needs root/systemd). ML renders may overheat/crash -- see thermal/INSTALL.md"
+  fi
+fi
 echo "Install OK. Runtime: $BINDIR  Packs: $PACKS  (materialize per-mode via --mode.)"
 echo "Try (Zero 2 W): $BINDIR/vzsdxsz_t2i t2i \"a lighthouse on a cliff at sunset\" 42   # ~75s prompt->image, fully on-device"
