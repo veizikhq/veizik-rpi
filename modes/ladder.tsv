@@ -1,0 +1,3 @@
+# soc	board	default_mode	available_tiers	note
+bcm2712	Raspberry Pi 5	quality	quality,balanced,fast,ultrafast,low-memory	8GB headroom; A76 +SDOT fast int8
+bcm2710a1	Raspberry Pi Zero 2 W	balanced	balanced,fast,low-memory	512MB; native-int streaming + fdropcache; low-memory auto <1GB
