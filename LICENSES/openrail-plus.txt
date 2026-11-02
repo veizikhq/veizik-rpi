@@ -1,0 +1,1 @@
+SDXS-512-DreamShaper weights (sdxs-512-dreamshaper-unet / sdxs-512-dreamshaper-clip): OpenRAIL++-M (Open & Responsible AI License). Attachment A use restrictions apply; recipients receive this license; state modifications; retain notices. (full text included at publish).

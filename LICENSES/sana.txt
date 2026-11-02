@@ -1,0 +1,5 @@
+SANA-Sprint 0.6B components (2nd-wave; shipped only after the te compliance bundle):
+- DiT (Efficient-Large-Model/Sana_Sprint_0.6B_1024px_diffusers) = Apache-2.0 — retain notice. HF card Direct-Use states "research purposes only"; carry that caveat in product terms.
+- DC-AE VAE (mit-han-lab/dc-ae-f32c32-sana-1.1-diffusers) = MIT — retain notice.
+- Text encoder (google/gemma-2-2b-it) = Google Gemma Terms — CONDITIONAL redistribution PERMITTED (not forbidden): bundle the Gemma license + pass the Gemma Prohibited Use Policy / use-restrictions to recipients + mark modifications. The te ships only once that compliance bundle is in place.
+(full license texts included at publish).
