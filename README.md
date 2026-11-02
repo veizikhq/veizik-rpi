@@ -5,6 +5,8 @@ Raspberry Pi Zero 2 W. Image (SDXS-512, Stable Diffusion 1.5), video (AnimateDif
 DreamShaper-8), and language (GPT-2, SmolLM2, LFM2.5) models, plus SANA-Sprint — measured on the
 real boards. The edge engine is arriving soon.
 
+> **Online Activation Required.** veizik on Raspberry Pi activates online on first use (`veizik activate`) and keeps a valid license through periodic online verification. On-device inference (CLIP, tokenizer, diffusion, decode) runs entirely on the board after activation.
+
 ## Install
 ```bash
 ./install.sh
