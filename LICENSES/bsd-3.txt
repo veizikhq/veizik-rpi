@@ -1,0 +1,1 @@
+BSD-3-Clause — torchvision pretrained weights (MobileNet-V2 IMAGENET1K_V1, Inception-V3 IMAGENET1K_V1; PyTorch/Meta) and pytorch/examples fast-neural-style (candy). Retain the copyright notice + the three conditions (source/binary notice, no endorsement use of the project/contributor names). (full text included at publish).
