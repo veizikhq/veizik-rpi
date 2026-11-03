@@ -30,5 +30,20 @@ if [ -d "$ROOT/thermal" ]; then
     echo "WARNING: thermal governor NOT installed (needs root/systemd). ML renders may overheat/crash -- see thermal/INSTALL.md"
   fi
 fi
+# POWER REQUIREMENT -- inadequate/shared power is the #1 cause of mid-render crashes on the Zero 2 W:
+# under sustained multi-core ML inference the current spikes sag the 5V rail -> undervoltage brownout ->
+# the board resets/hangs. (Verified: a starved passive hub crashed 4-thread loads in minutes; on adequate
+# direct power the same 4-core full load ran clean, vcgencmd get_throttled=0x0 throughout.)
+case "$SOC" in
+  bcm2710a1)
+    echo "POWER: use a quality 5V supply rated for sustained >=2.5A (official Raspberry Pi 5.1V/2.5A micro-USB"
+    echo "       supply is ideal) + a short, thick cable. Do NOT power from a passive/shared USB hub or an"
+    echo "       underrated multi-port charger -- multi-core ML load will brown it out mid-render."
+    echo "       Underpower check: 'vcgencmd get_throttled' -- undervoltage = bit 0x1 (now) / 0x10000 (since boot)."
+    echo "       If power is marginal, run fewer threads (--power eco); but adequate power is the real fix." ;;
+  bcm2712)
+    echo "POWER: use the recommended official Raspberry Pi 5 power supply." ;;
+esac
 echo "Install OK. Runtime: $BINDIR  Packs: $PACKS  (materialize per-mode via --mode.)"
-echo "Try (Zero 2 W): $BINDIR/vzsdxsz_t2i t2i \"a lighthouse on a cliff at sunset\" 42   # ~75s prompt->image, fully on-device"
+echo "Verify install: 'veizik status'  (lists installed models + activation state)."
+echo "Render: activate first ('veizik activate'), then 'veizik run sdxs-512' (sealed, lease-gated, fully on-device; 'veizik run --help' for prompt/seed/mode)."
