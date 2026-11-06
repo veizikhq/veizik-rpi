@@ -16,6 +16,20 @@ precomputed off-device, no cloud, no Python, no PyTorch. One engine, two boards:
 </p>
 <p align="center"><sub>AI-generated on Raspberry Pi hardware · left &amp; centre: Pi 5 CPU · right: Pi Zero 2 W (512 MB), prompt→image in ~75 s on the board. More at <a href="https://veizik.com/edge">veizik.com/edge</a>.</sub></p>
 
+**Reproduce these** (when the edge build ships — see Install below):
+
+```bash
+# Pi 5 — SDXS, warm ~2.9 s (balanced, 1.8 GHz), ~1.9 GB peak
+veizik run sdxs "a snow-capped mountain reflected in a still lake" --mode balanced --out ./out
+
+# Pi 5 — full Stable Diffusion 1.5, 25 steps, ~249 s warm; or a 4-step LCM-LoRA path ~37 s
+veizik run sd15 "a mountain lake at sunrise, mist, reflection" --mode balanced --out ./out
+
+# Pi Zero 2 W (512 MB) — SDXS, full prompt→image on the board, ~75 s, ~242 MB peak
+veizik run sdxs "a lighthouse on a cliff at golden hour" --out ./out
+```
+<sub>Warm, on-device, seed 42. Each render is bit-identical to the same pipeline on a Mac. Every output carries an AI-generated label and an embedded provenance mark.</sub>
+
 ## Why this exists
 
 Local-inference runtimes expect a GPU, or a laptop-class CPU and gigabytes of RAM. The Raspberry Pi
