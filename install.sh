@@ -1,49 +1,98 @@
-#!/bin/bash
-# veizik-rpi installer — one package, two boards, keyed by Broadcom SoC codename (Raspberry Pi's own
-# designation, as used by the board dtbs: bcm2712-rpi-5-b, bcm2710-rpi-zero-2-w).
-#   bcm2712    = Raspberry Pi 5           (ARMv8.2 Cortex-A76, +SDOT/i8mm)
-#   bcm2710a1  = Raspberry Pi Zero 2 W    (ARMv8.0 Cortex-A53, NEON fallback, memory-frugal)
-# Shared fp16 common packs are arch-agnostic (IEEE fp16, compat_id ad06dab6); runtimes are per-SoC.
+#!/bin/sh
+# veizik-rpi — thin bootstrap installer for the Raspberry Pi 5 and Raspberry Pi Zero 2 W (aarch64).
+#
+# What it does:
+#   1. checks the board (BCM2712 / BCM2710A1) and a 64-bit OS,
+#   2. downloads the veizik CLI from the veizik edge CDN and verifies its checksum,
+#   3. downloads the sealed engine bundles (language + vision) and installs them (weightless; small),
+#   4. installs the reactive thermal governor (recommended for sustained ML compute).
+#
+# Model weights are fetched on demand, per model, by `veizik pull`. Everything runs on the board —
+# no Python, no PyTorch, no cloud inference. Compute is lease-gated: `veizik activate` licenses the
+# device once (a one-time browser approval), after which runs are fully local.
+#
+# Override the source with VZ_EDGE_BASE=..., the install dir with VZ_BINDIR=... .
 set -eu
-ROOT="$(cd "$(dirname "$0")" && pwd)"
+
+BASE="${VZ_EDGE_BASE:-https://cdn.veizik.com}"
+BINDIR="${VZ_BINDIR:-$HOME/.local/bin}"
+WORK="$(mktemp -d "${TMPDIR:-/tmp}/veizik-rpi.XXXXXX")"
+trap 'rm -rf "$WORK"' EXIT INT TERM
+
+say() { printf '%s\n' "$*"; }
+
+# ---- 1. board + OS support gate -------------------------------------------------------------------
 MODEL="$(tr -d '\0' < /proc/device-tree/model 2>/dev/null || echo unknown)"
 COMPAT="$(tr '\0' ' ' < /proc/device-tree/compatible 2>/dev/null || echo '')"
-MEMKB="$(awk '/MemTotal/{print $2}' /proc/meminfo 2>/dev/null || echo 0)"
 case "$MODEL$COMPAT" in
-  *"Raspberry Pi 5"*|*bcm2712*)                   SOC=bcm2712;   DEF_MODE=quality ;;
-  *"Raspberry Pi Zero 2 W"*|*"model-zero-2-w"*)   SOC=bcm2710a1; DEF_MODE=balanced ;;
-  *) echo "Unsupported board: $MODEL (targets bcm2712 / bcm2710a1 = Raspberry Pi 5 / Zero 2 W)"; exit 2 ;;
+  *"Raspberry Pi 5"*|*bcm2712*)                            BOARD="Raspberry Pi 5 (BCM2712, Cortex-A76)";;
+  *"Raspberry Pi Zero 2 W"*|*"model-zero-2-w"*|*bcm2710*)  BOARD="Raspberry Pi Zero 2 W (BCM2710A1, Cortex-A53)";;
+  *) say "veizik-rpi targets the Raspberry Pi 5 and Raspberry Pi Zero 2 W. Detected: $MODEL" >&2; exit 2;;
 esac
-[ "$MEMKB" -lt 1048576 ] && DEF_MODE=low-memory
-BINDIR="$ROOT/bin/$SOC"
-echo "veizik-rpi: $MODEL -> SoC $SOC, ${MEMKB}kB RAM, default mode=$DEF_MODE"
-[ -x "$BINDIR/vzsd15z_accel" ] || { echo "runtime for $SOC not present in this package ($BINDIR)"; exit 3; }
-PACKS="${VZ_PACKS:-$ROOT/packs}"; mkdir -p "$HOME/.veizik/edge"
-# MANDATORY: reactive thermal governor for ML compute -- caps the SoC <=76C so sustained SD/SANA/LLM
-# renders complete instead of hitting the 80C firmware hard-throttle + OOM-crashing the board.
-if [ -d "$ROOT/thermal" ]; then
-  if sudo install -D -m755 "$ROOT/thermal/vz_thermal_governor.sh" /opt/veizik/thermal/vz_thermal_governor.sh 2>/dev/null \
-     && sudo install -D -m644 "$ROOT/thermal/vz-thermal-governor.service" /etc/systemd/system/vz-thermal-governor.service 2>/dev/null \
-     && sudo systemctl daemon-reload 2>/dev/null && sudo systemctl enable --now vz-thermal-governor.service 2>/dev/null; then
-    echo "thermal governor: installed + enabled (vz-thermal-governor.service, reactive <=76C cap)"
+if [ "$(uname -m)" != aarch64 ]; then
+  say "veizik-rpi needs 64-bit Raspberry Pi OS (aarch64). Detected $(uname -m)." >&2; exit 2
+fi
+command -v curl >/dev/null 2>&1 || { say "curl is required (sudo apt-get install -y curl)." >&2; exit 3; }
+command -v sha256sum >/dev/null 2>&1 || { say "sha256sum is required (coreutils)." >&2; exit 3; }
+say "veizik-rpi: $BOARD"
+
+# ---- 2. fetch + verify the CLI --------------------------------------------------------------------
+say "· downloading the veizik CLI …"
+curl -fSL --retry 3 -o "$WORK/veizik" "$BASE/veizik-aarch64"
+WANT="$(curl -fsSL "$BASE/SHA256SUMS" | awk '$2=="veizik-aarch64"||$2=="*veizik-aarch64"{print $1; exit}')"
+GOT="$(sha256sum "$WORK/veizik" | cut -d' ' -f1)"
+if [ -z "$WANT" ] || [ "$WANT" != "$GOT" ]; then
+  say "CLI checksum mismatch (expected '${WANT:-?}', got '$GOT') — aborting." >&2; exit 4
+fi
+mkdir -p "$BINDIR"
+install -m 0755 "$WORK/veizik" "$BINDIR/veizik"
+say "· veizik CLI installed → $BINDIR/veizik"
+
+# ---- 3. fetch + install the sealed engine bundles -------------------------------------------------
+# A bundle installs with the shared-core root placed beside it. Bundles are weightless and small;
+# model weights are pulled later, on demand, by `veizik pull <model>`.
+curl -fSL --retry 3 -o "$WORK/veizik-shared-core.vzroot" "$BASE/veizik-shared-core.vzroot"
+BUNDLES="veizik-edge-llm-linux-aarch64 veizik-edge-cv-linux-aarch64"
+for B in $BUNDLES; do
+  say "· installing engine bundle: $B"
+  curl -fSL --retry 3 -o "$WORK/$B.vzpack" "$BASE/$B.vzpack"
+  ( cd "$WORK" && "$BINDIR/veizik" install "$WORK/$B.vzpack" ) || {
+    say "  (bundle $B failed to install — continuing; retry later with: veizik install <path>)" >&2
+  }
+done
+
+# ---- 4. thermal governor (recommended) ------------------------------------------------------------
+# Sustained ML compute can drive the SoC to the firmware hard-throttle (and, on the Zero 2 W, brown
+# out a marginal supply). The reactive governor caps the SoC so long renders finish instead of
+# crashing. It needs root; skipped (with a note) if sudo/systemd are unavailable.
+GOV=""
+for d in "$HOME/.local/state/veizik/engines"/*/*/thermal; do
+  [ -f "$d/vz_thermal_governor.sh" ] && { GOV="$d"; break; }
+done
+if [ -n "$GOV" ] && command -v systemctl >/dev/null 2>&1; then
+  if sudo install -D -m 0755 "$GOV/vz_thermal_governor.sh" /opt/veizik/thermal/vz_thermal_governor.sh 2>/dev/null \
+     && sudo install -D -m 0644 "$GOV/vz-thermal-governor.service" /etc/systemd/system/vz-thermal-governor.service 2>/dev/null \
+     && sudo systemctl daemon-reload 2>/dev/null \
+     && sudo systemctl enable --now vz-thermal-governor.service 2>/dev/null; then
+    say "· thermal governor installed + enabled (vz-thermal-governor.service)"
   else
-    echo "WARNING: thermal governor NOT installed (needs root/systemd). ML renders may overheat/crash -- see thermal/INSTALL.md"
+    say "· thermal governor NOT installed (needs root/systemd) — recommended before long renders; see the engine's thermal/INSTALL.md"
   fi
 fi
-# POWER REQUIREMENT -- inadequate/shared power is the #1 cause of mid-render crashes on the Zero 2 W:
-# under sustained multi-core ML inference the current spikes sag the 5V rail -> undervoltage brownout ->
-# the board resets/hangs. (Verified: a starved passive hub crashed 4-thread loads in minutes; on adequate
-# direct power the same 4-core full load ran clean, vcgencmd get_throttled=0x0 throughout.)
-case "$SOC" in
-  bcm2710a1)
-    echo "POWER: use a quality 5V supply rated for sustained >=2.5A (official Raspberry Pi 5.1V/2.5A micro-USB"
-    echo "       supply is ideal) + a short, thick cable. Do NOT power from a passive/shared USB hub or an"
-    echo "       underrated multi-port charger -- multi-core ML load will brown it out mid-render."
-    echo "       Underpower check: 'vcgencmd get_throttled' -- undervoltage = bit 0x1 (now) / 0x10000 (since boot)."
-    echo "       If power is marginal, run fewer threads (--power eco); but adequate power is the real fix." ;;
-  bcm2712)
-    echo "POWER: use the recommended official Raspberry Pi 5 power supply." ;;
-esac
-echo "Install OK. Runtime: $BINDIR  Packs: $PACKS  (materialize per-mode via --mode.)"
-echo "Verify install: 'veizik status'  (lists installed models + activation state)."
-echo "Render: activate first ('veizik activate'), then 'veizik run sdxs-512' (sealed, lease-gated, fully on-device; 'veizik run --help' for prompt/seed/mode)."
+
+# ---- 5. next steps --------------------------------------------------------------------------------
+cat <<MSG
+
+veizik-rpi is installed. Next:
+
+  export PATH="$BINDIR:\$PATH"          # if 'veizik' is not on your PATH yet
+  veizik activate                       # license this device (one-time browser approval)
+  veizik list                           # the models you can run
+  veizik pull gpt2-124m                 # fetch a model's weights on demand
+  veizik run  gpt2-124m "The capital of France is"
+  veizik serve gpt2-124m                # OpenAI-compatible local API on http://127.0.0.1:8000
+
+Models run only after activation — compute is lease-gated, then fully on-device.
+Generated images and video carry an AI-generated provenance mark.
+Docs and the model catalogue: https://veizik.com/edge
+MSG

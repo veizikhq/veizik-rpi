@@ -4,3 +4,9 @@ packs/*.vzqup.sha256
 *.log
 bundles/*/models/*/*.vzqup
 bundles/*/models/*/*.vzqup.cache.*
+packs/*.tar.gz
+
+# thin repo: CLI + bundles come from the CDN, not the repo
+engines/
+packs/
+.DS_Store

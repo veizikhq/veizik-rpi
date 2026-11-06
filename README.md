@@ -5,9 +5,10 @@
 precomputed off-device, no cloud, no Python, no PyTorch. One engine, two boards: the Raspberry Pi 5
 (BCM2712) and the palm-sized, 512 MB Raspberry Pi Zero 2 W (BCM2710A1).
 
-> **The edge engine is arriving soon.** This repository describes what ships and how it was measured.
-> Packages are published as signed release assets when the edge build is cleared for download; until
-> then the boards, models and numbers below are the measured state, not an install you can run today.
+> **Available now.** Install on a 64-bit Raspberry Pi OS with the one-line bootstrap in
+> [Install](#install) below — it fetches the veizik CLI and the sealed engine bundles from the veizik
+> edge CDN. Model weights are pulled on demand (`veizik pull`); compute is lease-gated (one-time
+> online activation), then fully on-device. The boards, models and numbers below are the measured state.
 
 <p align="center">
   <img src="https://veizik.com/media/edge/sdxs_landscape.webp" width="30%" alt="A snow-capped mountain reflected in a still lake, generated on a Raspberry Pi 5.">
@@ -16,7 +17,7 @@ precomputed off-device, no cloud, no Python, no PyTorch. One engine, two boards:
 </p>
 <p align="center"><sub>AI-generated on Raspberry Pi hardware · left &amp; centre: Pi 5 CPU · right: Pi Zero 2 W (512 MB), prompt→image in ~75 s on the board. More at <a href="https://veizik.com/edge">veizik.com/edge</a>.</sub></p>
 
-**Reproduce these** (when the edge build ships — see Install below):
+**Reproduce these** (see [Install](#install) below):
 
 ```bash
 # Pi 5 — SDXS, warm ~2.9 s (balanced, 1.8 GHz), ~1.9 GB peak
@@ -126,41 +127,47 @@ veizik does not win everywhere, and a runtime README should say so.
 - **Computer-vision models**: for batch-1 convolution, int8 is already the arithmetic speed floor on
   these cores, so veizik's CV advantage is **model size at equal accuracy**, not latency.
 
-## Install (when the edge build is published)
+## Install
+
+On a 64-bit Raspberry Pi OS (Pi 5 or Zero 2 W):
 
 ```bash
-./install.sh
+curl -fsSL https://veizik.com/rpi/install.sh | sh
 ```
 
-`install.sh` detects the board from its model name, selects the matching native runtime, fetches the
-shared weight packs, and materializes the on-device cache. Then, the same command vocabulary as every
-other veizik package:
+The bootstrap checks the board, downloads the veizik CLI (checksum-verified) and the sealed engine
+bundles, and installs them. Bundles are weightless and small; model weights are fetched on demand.
+Then the same command vocabulary as every other veizik package:
 
 ```bash
-veizik activate                       # once per board; online activation, keeps a valid lease
-veizik run smollm2_135m "Write a haiku about the sea." --tokens 64
-veizik run sdxs "a lighthouse on a cliff at golden hour" --mode balanced --out ./out
+veizik activate                       # once per board; online activation, then a local lease
+veizik pull  gpt2-124m                # fetch a model's weights on demand
+veizik run   gpt2-124m "The capital of France is"
+veizik run   sdxs-512 "a lighthouse on a cliff at golden hour" --mode balanced --out ./out
+veizik serve gpt2-124m                # OpenAI-compatible local API on http://127.0.0.1:8000
+veizik list                           # the models installed on this board
 ```
 
 - **Online activation is required.** The board activates on first use (`veizik activate`) and keeps a
   valid licence through periodic online verification. All inference — CLIP, tokenizer, diffusion,
   decode — then runs entirely on the board.
-- **Weights are not bundled.** Each package is weightless and sealed; `veizik pull <model>` fetches the
-  public fp16 master and prepares the on-device cache. Model weights stay under their publisher's
-  licence.
-- Image output is written to the `--out` folder; text to `gen.txt`. `veizik run <model> --help` gives
-  the per-model flags.
+- **Weights are pulled, not bundled.** Each engine bundle is weightless and sealed; `veizik pull
+  <model>` fetches the public fp16 master and prepares the on-device cache. Model weights stay under
+  their publisher's licence.
+- A `--mode` tier trades memory and speed for quality; image output goes to `--out`.
+  `veizik run <model> --help` lists the per-model flags.
 
 ## Repository layout
 
-- `packs/` — shared weight packs (IEEE fp16 masters, architecture-agnostic), shipped as release assets.
-- `bin/bcm2712/` — Raspberry Pi 5 runtime (ARMv8.2, SDOT int8 tiling).
-- `bin/bcm2710a1/` — Raspberry Pi Zero 2 W runtime (ARMv8.0 NEON, memory-frugal streaming).
-- `modes/` — per-board quality/size `--mode` ladder.
-- `install.sh` — board detection, pack fetch, cache materialize.
+This repository is a thin bootstrap: the CLI and the sealed engine bundles are downloaded from the
+veizik edge CDN by `install.sh`, not committed here.
 
-The number formats and the engine are the product's own; this repository carries the public fp16
-masters and the native runtimes, not the proprietary layout.
+- `install.sh` — board detection, CLI + engine-bundle download, thermal governor.
+- `modes/` — per-board quality/size `--mode` ladder (reference).
+- `LICENSES/`, `NOTICE` — licence terms.
+
+The engine and its number formats are the product's own and are not distributed in source; the CLI and
+the sealed, weightless engine bundles are served from the CDN, and model weights are pulled on demand.
 
 ## Limits and cautions
 
