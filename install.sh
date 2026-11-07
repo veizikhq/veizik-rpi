@@ -4,7 +4,7 @@
 # What it does:
 #   1. checks the board (BCM2712 / BCM2710A1) and a 64-bit OS,
 #   2. downloads the veizik CLI from the veizik edge CDN and verifies its checksum,
-#   3. downloads the sealed engine bundles (language + vision) and installs them (weightless; small),
+#   3. downloads the sealed engine bundles (language, vision, image + video) and installs them (weightless; small),
 #   4. installs the reactive thermal governor (recommended for sustained ML compute).
 #
 # Model weights are fetched on demand, per model, by `veizik pull`. Everything runs on the board —
@@ -52,7 +52,7 @@ say "· veizik CLI installed → $BINDIR/veizik"
 # A bundle installs with the shared-core root placed beside it. Bundles are weightless and small;
 # model weights are pulled later, on demand, by `veizik pull <model>`.
 curl -fSL --retry 3 -o "$WORK/veizik-shared-core.vzroot" "$BASE/veizik-shared-core.vzroot"
-BUNDLES="veizik-edge-llm-linux-aarch64 veizik-edge-cv-linux-aarch64"
+BUNDLES="veizik-edge-llm-linux-aarch64 veizik-edge-cv-linux-aarch64 veizik-sdxs-512-1.0.0-thin-linux-aarch64 veizik-sd15-1.0.0-thin-linux-aarch64 veizik-video-dreamshaper8-lightning8-1.0.0-thin-linux-aarch64"
 for B in $BUNDLES; do
   say "· installing engine bundle: $B"
   curl -fSL --retry 3 -o "$WORK/$B.vzpack" "$BASE/$B.vzpack"
@@ -90,6 +90,8 @@ veizik-rpi is installed. Next:
   veizik list                           # the models you can run
   veizik pull gpt2-124m                 # fetch a model's weights on demand
   veizik run  gpt2-124m "The capital of France is"
+  veizik pull sdxs                      # an image model (weights fetched on demand)
+  veizik run  sdxs "a red sports car at sunset"
   veizik serve gpt2-124m                # OpenAI-compatible local API on http://127.0.0.1:8000
 
 Models run only after activation — compute is lease-gated, then fully on-device.
