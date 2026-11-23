@@ -197,6 +197,13 @@ the sealed, weightless engine bundles are served from the CDN, and model weights
 - **Every generated image and video is AI-generated** and carries a visible label plus an in-pixel/XMP
   provenance mark. Do not present a generated result as a photograph.
 
+## Published packs (checksums)
+
+- `veizik-convnext_tiny-1.0.0-linux-aarch64.vzpack` — edge CV (convnext_tiny)
+  - Download: https://cdn.veizik.com/veizik-convnext_tiny-1.0.0-linux-aarch64.vzpack
+  - sha256: `86dc9e89109aaea2d7209b81d6ebcce25394872319ea39f93db9ff0f780b8c9d`
+
+
 ---
 
 *Raspberry Pi is a trademark of Raspberry Pi Ltd. Hailo and Hailo-8 are names of Hailo Technologies
