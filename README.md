@@ -202,6 +202,15 @@ the sealed, weightless engine bundles are served from the CDN, and model weights
 - `veizik-convnext_tiny-1.0.0-linux-aarch64.vzpack` — edge CV (convnext_tiny)
   - Download: https://cdn.veizik.com/veizik-convnext_tiny-1.0.0-linux-aarch64.vzpack
   - sha256: `86dc9e89109aaea2d7209b81d6ebcce25394872319ea39f93db9ff0f780b8c9d`
+- `veizik-ssd-mobilenet-v1-10413.vzpack` — edge CV (object detection, SSD-MobileNet v1)
+  - Download: https://cdn.veizik.com/veizik-ssd-mobilenet-v1-10413.vzpack
+  - sha256: `963ab7425246112107aad50c02b8be293a53bb9704b83113b472c8f56218f04e`
+- `veizik-style-candy-10416.vzpack` — edge CV (fast style transfer, Candy)
+  - Download: https://cdn.veizik.com/veizik-style-candy-10416.vzpack
+  - sha256: `84eba1840ea06dbd86f69c48daaf49ff6e10d7bc46b17c4169ef4e46840ebe23`
+- `veizik-midas-v21-small-10417.vzpack` — edge CV (monocular depth, MiDaS v2.1 small)
+  - Download: https://cdn.veizik.com/veizik-midas-v21-small-10417.vzpack
+  - sha256: `1c8961ca1278df6c47d0efd6a3345fe67118951917cad1bec76fd23ea05d0553`
 
 
 ---
