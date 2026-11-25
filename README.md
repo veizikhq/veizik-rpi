@@ -217,6 +217,9 @@ the sealed, weightless engine bundles are served from the CDN, and model weights
 - `veizik-mnv3_small-1.0.0-linux-aarch64.vzpack` — edge CV (mnv3_small)
   - Download: https://cdn.veizik.com/veizik-mnv3_small-1.0.0-linux-aarch64.vzpack
   - sha256: `2500c18b8c1e479bf266247744036e14e3b10f1759b3fab89bd1efcd8dbe8c00`
+- `veizik-sdxs-512-1.0.0-thin-linux-aarch64.vzpack` — edge image (SDXS-512, text→image)
+  - Download: https://cdn.veizik.com/veizik-sdxs-512-1.0.0-thin-linux-aarch64.vzpack
+  - sha256: `846d1b176a5d7aa7f9891b026cae8c9718cc4b9312e5c4d4631f930f05a027b3`
 
 
 ---
