@@ -211,6 +211,12 @@ the sealed, weightless engine bundles are served from the CDN, and model weights
 - `veizik-midas-v21-small-10417.vzpack` — edge CV (monocular depth, MiDaS v2.1 small)
   - Download: https://cdn.veizik.com/veizik-midas-v21-small-10417.vzpack
   - sha256: `1c8961ca1278df6c47d0efd6a3345fe67118951917cad1bec76fd23ea05d0553`
+- `veizik-efficientnet_b0-1.0.0-linux-aarch64.vzpack` — edge CV (efficientnet_b0)
+  - Download: https://cdn.veizik.com/veizik-efficientnet_b0-1.0.0-linux-aarch64.vzpack
+  - sha256: `8ffc84ba6289725deb6cf506b8a09dde84d3db92fd8c1f3659471c017f695263`
+- `veizik-mnv3_small-1.0.0-linux-aarch64.vzpack` — edge CV (mnv3_small)
+  - Download: https://cdn.veizik.com/veizik-mnv3_small-1.0.0-linux-aarch64.vzpack
+  - sha256: `2500c18b8c1e479bf266247744036e14e3b10f1759b3fab89bd1efcd8dbe8c00`
 
 
 ---
